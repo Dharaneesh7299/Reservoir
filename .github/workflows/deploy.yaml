@@ -1,4 +1,4 @@
-name: Ticket Booking CI
+name: Reservoir CI
 
 on:
   push:
@@ -53,13 +53,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: ticket-frontend
+          - name: reservoir-frontend
             context: ./ticket-booking-frontend
-          - name: ticket-inventory
+          - name: reservoir-inventory
             context: ./services/inventory_service
-          - name: ticket-order
+          - name: reservoir-order
             context: ./services/order_service
-          - name: ticket-notification
+          - name: reservoir-notification
             context: ./services/notification_service
 
     steps:
@@ -73,7 +73,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # The expiration worker reuses the ticket-inventory image, so it has no separate build.
+      # The expiration worker reuses the reservoir-inventory image, so it has no separate build.
       - name: Build Docker image
         run: |
           docker build \

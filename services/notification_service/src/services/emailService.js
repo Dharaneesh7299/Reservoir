@@ -4,7 +4,7 @@ const { Resend } = require("resend");
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Must be an address on a domain verified in Resend to reach arbitrary recipients.
-const EMAIL_FROM = process.env.EMAIL_FROM || "Acme <onboarding@resend.dev>";
+const EMAIL_FROM = process.env.EMAIL_FROM || "Reservoir <onboarding@resend.dev>";
 
 async function sendEmail({ to, subject, text }) {
     console.log("Sending email to:", to);

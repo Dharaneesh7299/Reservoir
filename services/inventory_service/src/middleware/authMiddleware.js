@@ -26,8 +26,8 @@ function authenticateToken(req, res, next) {
 
   try {
     const payload = jwt.verify(token, secret, {
-      issuer: "ticket-booking-api",
-      audience: "ticket-booking-client",
+      issuer: "reservoir-api",
+      audience: "reservoir-client",
       algorithms: ["HS256"],
     });
 

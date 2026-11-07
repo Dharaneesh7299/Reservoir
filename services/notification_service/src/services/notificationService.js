@@ -20,7 +20,7 @@ async function sendNotification(event) {
 
     switch (eventType) {
         case "reservation.confirmed":
-            subject = "Your Ticket Booking Is Confirmed!";
+            subject = "Your Reservoir booking is confirmed";
             text =
                 `Your reservation has been confirmed.\n\n` +
                 `Reservation ID: ${reservationId}\n` +
@@ -29,7 +29,7 @@ async function sendNotification(event) {
             break;
 
         case "reservation.expired":
-            subject = "Your Ticket Reservation Has Expired";
+            subject = "Your Reservoir reservation has expired";
             text =
                 `Your reservation has expired.\n\n` +
                 `Reservation ID: ${reservationId}\n\n` +

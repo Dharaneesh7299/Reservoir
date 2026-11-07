@@ -1,16 +1,38 @@
-# React + Vite
+# Reservoir: Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The React single-page app for [Reservoir](../README.md): the event catalogue, the booking flow, "My Bookings", sign-in, and the admin event editor.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+React 19, React Router 7 and Vite 8, styled with plain CSS and shared design tokens (`src/index.css`). In production, Nginx serves the app and proxies `/api` to the Inventory Service (`nginx.conf`).
 
-## React Compiler
+## Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev       # Vite dev server on :3000, proxies /api → http://localhost:4001
+npm run build     # production build into dist/
+npm run preview   # serve the production build locally
+npm run lint      # Oxlint
+```
 
-## Expanding the Oxlint configuration
+## Configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+| Variable | Default | Description |
+|---|---|---|
+| `VITE_API_URL` | `""` | API base URL. Leave it empty to use same-origin `/api` (Nginx or the Vite proxy) |
+| `VITE_API_TARGET` | `http://localhost:4001` | Where the Vite dev server proxies `/api` |
+
+## Layout
+
+```
+src/
+├── App.jsx              # Routes, navbar, booking modal & flow
+├── pages/               # Events.jsx, Bookings.jsx
+├── components/          # EventCard, AuthModal, AdminAddTicketsModal
+├── context/             # AuthProvider: sessions, token refresh, tab sync
+├── services/api.js      # Every backend call
+└── index.css            # Design tokens + shared animations
+```
+
+For how the app fits into the whole system, see the main [README](../README.md) and [ARCHITECTURE.md](../ARCHITECTURE.md).

@@ -32,8 +32,8 @@ function signAccessToken(user) {
     jwtSecret,
     {
       expiresIn: ACCESS_TOKEN_TTL,
-      issuer: "ticket-booking-api",
-      audience: "ticket-booking-client",
+      issuer: "reservoir-api",
+      audience: "reservoir-client",
     }
   );
 }

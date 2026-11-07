@@ -2,7 +2,7 @@
 services:
   frontend:
     build: ./ticket-booking-frontend
-    image: ticket-frontend
+    image: reservoir-frontend
     ports:
       - "3000:80"
     depends_on:
@@ -11,7 +11,7 @@ services:
 
   inventory:
     build: ./services/inventory_service
-    image: ticket-inventory
+    image: reservoir-inventory
     ports:
       - "4001:4001"
     env_file:
@@ -33,7 +33,7 @@ services:
   # Reuses the inventory image; only the start command differs.
   expiration-worker:
     build: ./services/inventory_service
-    image: ticket-inventory
+    image: reservoir-inventory
     command: ["npm", "run", "worker:expiration"]
     env_file:
       - ./services/inventory_service/.env
@@ -54,7 +54,7 @@ services:
 
   order:
     build: ./services/order_service
-    image: ticket-order
+    image: reservoir-order
     env_file:
       - ./services/order_service/.env
     environment:
@@ -69,7 +69,7 @@ services:
 
   notification:
     build: ./services/notification_service
-    image: ticket-notification
+    image: reservoir-notification
     env_file:
       - ./services/notification_service/.env
     environment:

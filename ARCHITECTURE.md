@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes how the TicketHub ticket-booking system is built: the services, how they talk to each other, where data lives, and the guarantees each piece provides.
+This document describes how the Reservoir ticket-booking system is built: the services, how they talk to each other, where data lives, and the guarantees each piece provides.
 
 For setup and usage, see the [README](README.md).
 
@@ -8,7 +8,7 @@ For setup and usage, see the [README](README.md).
 
 ## 1. System overview
 
-TicketHub is an **event-driven microservice system**. A React SPA talks to a single HTTP API (the Inventory Service). That service owns the hot path (seat counts and reservations) in **Redis**, persists users and orders in **PostgreSQL**, and publishes domain events to **RabbitMQ**. Downstream services (Order, Notification) react to those events asynchronously.
+Reservoir is an **event-driven microservice system**. A React SPA talks to a single HTTP API (the Inventory Service). That service owns the hot path (seat counts and reservations) in **Redis**, persists users and orders in **PostgreSQL**, and publishes domain events to **RabbitMQ**. Downstream services (Order, Notification) react to those events asynchronously.
 
 ```mermaid
 flowchart LR
@@ -18,7 +18,7 @@ flowchart LR
         Nginx["Nginx<br/>static files + /api reverse proxy"]
     end
 
-    subgraph Core["ticket-inventory image"]
+    subgraph Core["reservoir-inventory image"]
         Inv["Inventory Service<br/>Express 5 · :4001<br/>auth · inventory · reservations"]
         Worker["Expiration Worker<br/>(own container, 1 s loop)"]
     end
@@ -352,7 +352,7 @@ src/
 | Concern | Implementation |
 |---|---|
 | Password storage | bcrypt, cost factor 12. Length 8–72 (bcrypt's input limit) |
-| Tokens | HS256 JWT, 15 min expiry, `issuer=ticket-booking-api`, `audience=ticket-booking-client`, algorithm pinned on verify |
+| Tokens | HS256 JWT, 15 min expiry, `issuer=reservoir-api`, `audience=reservoir-client`, algorithm pinned on verify |
 | Refresh tokens | 48 random bytes (base64url), stored only as a SHA-256 hash with a 7-day TTL. Single-use: `GETDEL` makes rotation atomic. The user's role is re-read on every refresh, so a role change takes effect within 15 minutes. Revoked on logout. They live in `localStorage`, the same as the access token, so they are readable by any XSS; an `httpOnly` cookie would be stronger |
 | Authorization | `requireRole("ADMIN")` for inventory writes. Owner-or-admin checks for reading or confirming reservations |
 | User enumeration | Login returns the same error for an unknown email and a wrong password |
@@ -372,7 +372,7 @@ There is no self-service admin signup. You promote a user to admin directly in t
 |---|---|---|---|
 | frontend | `3000 → 80` | `wget /nginx-health` (Dockerfile) | inventory |
 | inventory | `4001 → 4001` | — | redis, postgres, rabbitmq (healthy) |
-| expiration-worker | — (same `ticket-inventory` image) | — | inventory (started), redis, postgres, rabbitmq (healthy) |
+| expiration-worker | — (same `reservoir-inventory` image) | — | inventory (started), redis, postgres, rabbitmq (healthy) |
 | order | not published (4002 internal) | — | postgres, rabbitmq (healthy) |
 | notification | — | — | rabbitmq (healthy) |
 | redis | `6379 → 6379` | `redis-cli ping` | — |
@@ -384,7 +384,7 @@ All services use `restart: unless-stopped`. The Node services connect to their d
 **CI:** [.github/workflows/deploy.yaml](.github/workflows/deploy.yaml) runs on pushes to `main`:
 
 1. **`test`:** starts a Redis service container and runs the inventory test suite.
-2. **`build-and-push`:** runs only if the tests pass. A matrix job builds `ticket-frontend`, `ticket-inventory`, `ticket-order` and `ticket-notification`, and pushes each to GHCR tagged `latest` and with the commit SHA. The expiration worker uses the `ticket-inventory` image.
+2. **`build-and-push`:** runs only if the tests pass. A matrix job builds `reservoir-frontend`, `reservoir-inventory`, `reservoir-order` and `reservoir-notification`, and pushes each to GHCR tagged `latest` and with the commit SHA. The expiration worker uses the `reservoir-inventory` image.
 
 ---
 
@@ -398,38 +398,3 @@ All services use `restart: unless-stopped`. The Node services connect to their d
 | Notification Service | ✅ | Competing consumers. `prefetch(1)` keeps work evenly spread |
 | Redis | ⚠️ Single node | Lua scripts touch several keys. Redis Cluster would need hash tags so related keys share a slot |
 | `GET /api/events` | ✅ | Reads the `events:index` set, then two `MGET`s, so two round trips whatever the catalogue size. No keyspace scan |
-
----
-
-## 11. Remediation phases
-
-A code review found the gaps below. Each one is handled as its own phase.
-
-- **Phases 1–10** fix problems without changing the architecture.
-- **Phases 11–13** extend it: a Redis key for the event index, Order Service retry and DLQ queues, and refresh-token endpoints. They add to the existing services and stores and replace nothing, and the sections above already describe them.
-
-| Phase | Issue | Status | Fix |
-|---|---|---|---|
-| 1 | The expiration worker wasn't in `docker-compose.yml`, so in Compose, unconfirmed reservations never expired and their seats never came back | ✅ Fixed | Added an `expiration-worker` Compose service. It reuses the `ticket-inventory` image and runs `npm run worker:expiration` |
-| 2 | Sign Out threw an error: `handleLogout` in [App.jsx](ticket-booking-frontend/src/App.jsx) called `setBookings`, which was never defined | ✅ Fixed | Removed the call. `bookings` is derived from the current user, so it clears itself on logout |
-| 3 | The CI workflow built `./ticket-booking-system`, which doesn't exist | ✅ Fixed | A matrix job builds and pushes `ticket-frontend`, `ticket-inventory`, `ticket-order` and `ticket-notification`, and runs only after the `test` job passes |
-| 4 | No `.env.example` for `order_service` or `notification_service`, although Compose requires their `.env` files | ✅ Fixed | Added both, and documented host-port URLs in the inventory example |
-| 5 | The email sender was hard-coded to `onboarding@resend.dev`, which only delivers to the Resend account owner | ✅ Fixed | New `EMAIL_FROM` variable. The old address remains the default |
-| 6 | Migrations needed a hard-to-remember `--config prisma7.config.ts` flag | ✅ Fixed | Added `npm run migrate:deploy`, `migrate:dev` and `prisma:generate` (inventory) and `start`, `dev` and `prisma:generate` (order) |
-| 7 | Postgres and RabbitMQ credentials were hard-coded in `docker-compose.yml` | ✅ Fixed | They are read from a root `.env` (see `.env.example`), with the old values as defaults |
-| 8 | "Confirm in Demo Mode" saved bookings the backend never knew about | ✅ Fixed | Removed the button, its handler and its CSS. Leftover `demo-*` entries are dropped from the cache on the next refresh |
-| 9 | `src/data/events.jsx` was a static catalogue that nothing imported | ✅ Fixed | Deleted, along with the empty `src/data/` folder, with the owner's approval |
-| 10 | No tests | ✅ Fixed | [tests/reservation.test.js](services/inventory_service/tests/reservation.test.js) covers the three Lua scripts against real Redis (DB 15, isolated key prefix) using `node --test`, including a 20-way concurrency test. Runs in CI |
-
-### Architecture extensions
-
-| Phase | Issue | Status | Fix | Sections affected |
-|---|---|---|---|---|
-| 11 | `GET /api/events` used `KEYS inventory:*`, which is O(N) and blocks Redis | ✅ Fixed | New `events:index` set, kept in step with admin create/delete in a single `MULTI`. Listing uses `SMEMBERS` and two `MGET`s. On startup the index is filled from existing data with a non-blocking, idempotent `SCAN` | §3.3, §10 |
-| 12 | The Order consumer had no DLQ, so a message that always failed was requeued forever | ✅ Fixed | `order.retry` (5 s delay) and `order.dlq`, following the Notification Service's pattern: up to 5 attempts, invalid JSON sent straight to the DLQ, and acks only after a confirmed hand-off | §5 |
-| 13 | No refresh tokens: users were logged out after 15 minutes | ✅ Fixed | Rotating, single-use refresh tokens (`POST /api/auth/refresh`, `POST /api/auth/logout`) stored as hashes in Redis. The frontend refreshes before expiry and keeps tabs in sync | §3.2, §3.3, §7, §8 |
-
-### Still open
-
-- Refresh tokens are kept in `localStorage`. Moving them to an `httpOnly` cookie would protect them from XSS, but needs cookie and CSRF handling on the API.
-- Tests cover only the Lua scripts. The event index, refresh rotation and the Order retry path need Postgres and RabbitMQ fixtures to test.

@@ -292,9 +292,9 @@ function AppContent() {
 
       {/* Minimal White Navigation */}
       <nav className="navbar">
-        <Link to="/" className="brand" aria-label="TicketHub Home">
+        <Link to="/" className="brand" aria-label="Reservoir Home">
           <div className="brand-logo">🎟️</div>
-          <h2>TicketHub</h2>
+          <h2>Reservoir</h2>
         </Link>
 
         <div className="nav-links">

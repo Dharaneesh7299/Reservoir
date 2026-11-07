@@ -1,10 +1,12 @@
-# TicketHub: Event-Driven Ticket Booking Platform
+# Reservoir
 
-TicketHub is a ticket booking system built from small, independent services. Users browse live events, reserve seats, and confirm their booking. Admins manage events and seat counts. Behind the scenes, the system guarantees that **a seat is never sold twice**, that **retried requests never double-book**, and that **slow work such as sending emails never delays a booking**.
+**An event-driven ticket reservation engine with atomic seat locking.**
+
+Reservoir is a ticket booking system built from small, independent services. Users browse live events, reserve seats, and confirm their booking. Admins manage events and seat counts. Behind the scenes, the system guarantees that **a seat is never sold twice**, that **retried requests never double-book**, and that **slow work such as sending emails never delays a booking**.
 
 It is built with **Node.js / Express 5**, **React 19**, **Redis** (atomic Lua scripts), **PostgreSQL** (Prisma 7) and **RabbitMQ**, and runs with one `docker compose` command.
 
-> 📐 This README explains every component and workflow. For low-level design details (key schemas, error codes, scaling notes, the remediation log), see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+> 📐 This README explains every component and workflow. For low-level design details (key schemas, error codes, scaling notes), see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
 
 ---
 
@@ -28,7 +30,6 @@ It is built with **Node.js / Express 5**, **React 19**, **Redis** (atomic Lua sc
 16. [Testing](#16-testing)
 17. [Operations and monitoring](#17-operations-and-monitoring)
 18. [Troubleshooting](#18-troubleshooting)
-19. [Project history and known limitations](#19-project-history-and-known-limitations)
 
 ---
 
@@ -201,7 +202,7 @@ A durable `direct` exchange called `ticket.events`, plus one queue per consumer,
 
 On every push to `main`:
 1. Run the test suite against a Redis service container.
-2. If the tests pass, build and push four images to GitHub Container Registry: `ticket-frontend`, `ticket-inventory`, `ticket-order` and `ticket-notification`. Each is tagged `latest` and with the commit SHA.
+2. If the tests pass, build and push four images to GitHub Container Registry: `reservoir-frontend`, `reservoir-inventory`, `reservoir-order` and `reservoir-notification`. Each is tagged `latest` and with the commit SHA.
 
 ---
 
@@ -367,7 +368,7 @@ If the confirm step fails (for example, the network drops), the booking shows as
 ### W7. Email notifications (Notification Service)
 
 1. The Notification Service receives `confirmed` and `expired` events from `notification.events`, one at a time.
-2. It builds the email ("Your Ticket Booking Is Confirmed!" or "Your Ticket Reservation Has Expired") and sends it through Resend.
+2. It builds the email ("Your Reservoir booking is confirmed" or "Your Reservoir reservation has expired") and sends it through Resend.
 3. **On failure**, it retries every 10 s, up to 3 attempts, then moves the message to `notification.dlq`. The booking itself is never affected.
 
 ### W8. "My Bookings"
@@ -415,10 +416,11 @@ If the confirm step fails (for example, the network drops), the booking shows as
 ## 10. Project structure
 
 ```
-zero-downtime-express-api/
+reservoir/
 ├── docker-compose.yml               # 5 app containers + Redis, Postgres, RabbitMQ
 ├── .env.example                     # Infrastructure credentials for docker compose
-├── ARCHITECTURE.md                  # Detailed design + remediation log
+├── ARCHITECTURE.md                  # Detailed system design
+├── CHANGELOG.md                     # Project change history
 ├── .github/workflows/deploy.yaml    # CI: test, then build & push images to GHCR
 ├── ticket-booking-frontend/         # React SPA + Nginx
 │   ├── src/
@@ -488,7 +490,7 @@ docker compose exec inventory npm run migrate:deploy
 
 | URL | What |
 |---|---|
-| http://localhost:3000 | TicketHub web app |
+| http://localhost:3000 | Reservoir web app |
 | http://localhost:4001/health | Inventory API health |
 | http://localhost:15673 | RabbitMQ management UI (`guest` / `guest`) |
 
@@ -639,7 +641,7 @@ Frontend scripts: `npm run dev`, `npm run build`, `npm run preview`, `npm run li
 |---|---|---|---|
 | `RABBITMQ_URL` | **yes** | — | RabbitMQ connection string |
 | `RESEND_API_KEY` | **yes** for email | — | Resend API key |
-| `EMAIL_FROM` | no | `Acme <onboarding@resend.dev>` | Sender address. Use one on a domain verified in Resend to reach any recipient |
+| `EMAIL_FROM` | no | `Reservoir <onboarding@resend.dev>` | Sender address. Use one on a domain verified in Resend to reach any recipient |
 
 ### Docker Compose (root `.env`)
 
@@ -753,34 +755,6 @@ docker compose down -v                                                   # stop 
 | "Inventory has not been initialized" when booking | An admin must create the event first. |
 | Seats never come back after abandoned reservations | Check the worker with `docker compose ps expiration-worker` and `docker compose logs expiration-worker`. Seats are released only after `RESERVATION_TTL_SECONDS`. |
 | No emails arrive | Check `RESEND_API_KEY`. With the default `onboarding@resend.dev` sender, Resend only delivers to your own account email, so set `EMAIL_FROM` to an address on a verified domain. Check `notification.dlq`. |
-| Logged out unexpectedly | The refresh token expired (after 7 days), was revoked by signing out, or was issued before refresh tokens existed. Sign in again. |
+| Logged out unexpectedly | The refresh token expired (after 7 days) or was revoked by signing out. Sign in again. |
 | An order stays `PENDING` in Postgres | Check `order.dlq`. "My Bookings" still shows the correct status, because it checks Redis. |
 | Port already in use | Change the host side of the port mapping in `docker-compose.yml`. |
-
----
-
-## 19. Project history and known limitations
-
-Issues found in code review were fixed as **phases**, one issue per phase. Phases 1–10 fix problems without changing the architecture. Phases 11–13 add to it (a new Redis key, new queues, new auth endpoints) without replacing anything. Full details are in [ARCHITECTURE.md §11](ARCHITECTURE.md#11-remediation-phases).
-
-| Phase | Fix | Status |
-|---|---|---|
-| 1 | Expiration worker runs as a Compose service | ✅ |
-| 2 | Sign Out crash fixed | ✅ |
-| 3 | CI tests, then builds and pushes every service image | ✅ |
-| 4 | `.env.example` for every service | ✅ |
-| 5 | Configurable email sender (`EMAIL_FROM`) | ✅ |
-| 6 | npm scripts for Prisma migrations | ✅ |
-| 7 | Compose credentials come from a root `.env` | ✅ |
-| 8 | Client-only "demo mode" bookings removed | ✅ |
-| 9 | Unused `src/data/events.jsx` deleted | ✅ |
-| 10 | Lua script test suite | ✅ |
-| 11 | `GET /api/events` uses an `events:index` set instead of `KEYS` | ✅ |
-| 12 | Retry queue and dead-letter queue for the Order Service | ✅ |
-| 13 | Rotating refresh tokens, with sessions synced across tabs | ✅ |
-
-**Still open:**
-
-- Refresh tokens live in `localStorage`, so a cross-site scripting bug could read them. An `httpOnly` cookie would be safer but needs cookie and CSRF handling.
-- The automated tests cover only the Lua scripts. Tests for the event index, refresh rotation and the Order retry path would need Postgres and RabbitMQ fixtures.
-- If a retried `reservation.expired` event reaches the Order Service before its `reservation.created`, the order stays `PENDING` in Postgres. "My Bookings" still shows the correct status because it checks Redis.
