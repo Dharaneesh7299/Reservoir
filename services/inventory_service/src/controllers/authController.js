@@ -91,6 +91,53 @@ async function login(req, res, next) {
   }
 }
 
+function validRefreshToken(value) {
+  return typeof value === "string" && /^[A-Za-z0-9_-]{32,128}$/.test(value);
+}
+
+// Exchange a refresh token for a new access token + refresh token.
+async function refresh(req, res, next) {
+  try {
+    const { refreshToken } = req.body || {};
+
+    if (!validRefreshToken(refreshToken)) {
+      return res.status(400).json({
+        error: "A valid refreshToken is required",
+      });
+    }
+
+    const result = await authService.refreshSession(refreshToken);
+
+    return res.status(200).json({
+      message: "Session refreshed",
+      ...result,
+    });
+  } catch (error) {
+    if (error.code === "INVALID_REFRESH_TOKEN") {
+      return res.status(401).json({
+        error: "Invalid or expired refresh token",
+      });
+    }
+
+    return next(error);
+  }
+}
+
+// Revoke a refresh token. Always 204, so callers can't probe token validity.
+async function logout(req, res, next) {
+  try {
+    const { refreshToken } = req.body || {};
+
+    if (validRefreshToken(refreshToken)) {
+      await authService.revokeRefreshToken(refreshToken);
+    }
+
+    return res.status(204).end();
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function getCurrentUser(req, res, next) {
   try {
     const prisma = require("../config/prisma");
@@ -114,5 +161,7 @@ async function getCurrentUser(req, res, next) {
 module.exports = {
   register,
   login,
+  refresh,
+  logout,
   getCurrentUser,
 };

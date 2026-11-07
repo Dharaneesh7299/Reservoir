@@ -85,7 +85,8 @@ function AuthModal() {
           &times;
         </button>
 
-        <div className="auth-header">
+        {/* Keyed by tab so the heading fades when switching Sign In / Register. */}
+        <div className="auth-header" key={tab}>
           <h2 className="auth-title">
             {tab === "login" ? "Welcome back" : "Create an account"}
           </h2>

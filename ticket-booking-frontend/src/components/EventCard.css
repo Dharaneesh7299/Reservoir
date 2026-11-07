@@ -1,27 +1,56 @@
 /* ==========================================================================
-   Event Card - Minimal White Theme (No Image Dependencies)
+   Event Card - Light Theme
    ========================================================================== */
 
 .event-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
   padding: 20px;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+  /* Staggered entrance: --i is set per card in Events.jsx. */
+  animation: riseIn var(--dur-slow) var(--ease-out) both;
+  animation-delay: calc(min(var(--i, 0), 12) * 55ms);
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) ease,
+    border-color var(--dur-base) ease;
+}
+
+/* Soft accent band that slides in along the top edge on hover. */
+.event-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, #93c5fd, var(--primary), #a5b4fc);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-slow) var(--ease-out);
 }
 
 .event-card:hover {
-  transform: translateY(-2px);
-  border-color: #cbd5e1;
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.05),
-    0 4px 6px -4px rgba(0, 0, 0, 0.03);
+  transform: translateY(-4px);
+  border-color: var(--primary-border);
+  box-shadow: var(--shadow-md);
+}
+
+.event-card:hover::before {
+  transform: scaleX(1);
 }
 
 .event-card.sold-out {
-  opacity: 0.65;
+  opacity: 0.6;
+  filter: grayscale(0.4);
+}
+
+.event-card.sold-out:hover {
+  transform: none;
+  box-shadow: var(--shadow-xs);
 }
 
 .event-card-header {
@@ -37,16 +66,22 @@
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  background: #f8fafc;
-  color: #1e40af;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
+  background: var(--primary-softer);
+  color: var(--primary-hover);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-pill);
   font-size: 12px;
   font-weight: 600;
 }
 
 .category-icon {
+  display: inline-block;
   font-size: 13px;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.event-card:hover .category-icon {
+  transform: scale(1.2) rotate(-8deg);
 }
 
 .card-header-right {
@@ -57,30 +92,28 @@
 
 .admin-edit-chip-btn {
   padding: 2px 7px;
-  background: #f1f5f9;
-  color: #334155;
-  border: 1px solid #cbd5e1;
+  background: var(--admin-soft);
+  color: var(--admin);
+  border: 1px solid var(--admin-border);
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--dur-fast) ease;
 }
 
 .admin-edit-chip-btn:hover {
-  background: #0f172a;
-  color: #ffffff;
-  border-color: #0f172a;
+  background: var(--admin-border);
 }
 
 .event-id-badge {
   font-size: 11px;
-  color: #94a3b8;
-  font-family: monospace;
-  background: #f8fafc;
+  color: var(--text-light);
+  font-family: var(--font-mono);
+  background: var(--bg-subtle);
   padding: 3px 6px;
   border-radius: 4px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--border-light);
 }
 
 .event-info {
@@ -93,9 +126,14 @@
   margin: 0 0 14px;
   font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-main);
   line-height: 1.35;
   letter-spacing: -0.015em;
+  transition: color var(--dur-fast) ease;
+}
+
+.event-card:hover .event-title {
+  color: var(--primary-hover);
 }
 
 .event-meta {
@@ -110,7 +148,7 @@
   align-items: center;
   gap: 8px;
   margin: 0;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -125,7 +163,7 @@
   gap: 12px;
   margin-top: auto;
   padding-top: 18px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-light);
 }
 
 .event-pricing {
@@ -137,42 +175,61 @@
 .event-price {
   font-size: 20px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-main);
 }
 
 .event-availability {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 12px;
-  color: #166534;
+  color: var(--success);
   font-weight: 600;
 }
 
+.event-availability::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.8;
+}
+
 .event-availability.empty {
-  color: #dc2626;
+  color: var(--danger);
 }
 
 .book-btn {
   padding: 9px 16px;
-  background: #2563eb;
+  background: var(--primary);
   color: #ffffff;
   border: none;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.05s ease;
   white-space: nowrap;
+  box-shadow: 0 6px 14px -6px rgba(37, 99, 235, 0.5);
+  transition:
+    background var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) ease;
 }
 
 .book-btn:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px -8px rgba(37, 99, 235, 0.55);
 }
 
 .book-btn:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 .book-btn:disabled {
-  background: #e2e8f0;
-  color: #94a3b8;
+  background: var(--bg-muted);
+  color: var(--text-light);
+  box-shadow: none;
   cursor: not-allowed;
 }

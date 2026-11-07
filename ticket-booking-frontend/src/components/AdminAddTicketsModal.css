@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Admin Add Tickets Modal - Minimal White Theme
+   Admin Add Tickets Modal - Light Theme
    ========================================================================== */
 
 .admin-overlay {
@@ -10,10 +10,10 @@
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background-color: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  animation: authFadeIn 0.15s ease-out;
+  background-color: rgba(148, 163, 184, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: authFadeIn var(--dur-base) ease-out;
 }
 
 .admin-modal {
@@ -22,14 +22,12 @@
   max-width: 520px;
   max-height: 90vh;
   overflow-y: auto;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
   padding: 30px 28px 28px;
-  box-shadow:
-    0 10px 25px -5px rgba(0, 0, 0, 0.08),
-    0 8px 10px -6px rgba(0, 0, 0, 0.04);
-  animation: authSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-lg);
+  animation: authSlideUp var(--dur-slow) var(--ease-out);
 }
 
 .admin-close-btn {
@@ -44,26 +42,27 @@
   padding: 0;
   background: transparent;
   border: none;
-  border-radius: 6px;
-  color: #64748b;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease, transform var(--dur-base) var(--ease-out);
 }
 
 .admin-close-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--bg-muted);
+  color: var(--text-main);
+  transform: rotate(90deg);
 }
 
 .admin-badge {
   display: inline-block;
   padding: 3px 9px;
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fde68a;
-  border-radius: 20px;
+  background: var(--admin-soft);
+  color: var(--admin);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -75,22 +74,22 @@
   margin: 0 0 6px;
   font-size: 21px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-main);
   letter-spacing: -0.015em;
 }
 
 .admin-modal-subtitle {
   margin: 0 0 16px;
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-muted);
   line-height: 1.45;
 }
 
 .quick-select-section {
   padding: 12px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   margin-bottom: 18px;
 }
 
@@ -107,26 +106,25 @@
 
 .new-event-btn {
   padding: 2px 8px;
-  background: #ffffff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-surface);
+  color: var(--primary);
+  border: 1px solid var(--primary-border);
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--dur-fast) ease;
 }
 
 .new-event-btn:hover {
-  background: #eff6ff;
-  border-color: #93c5fd;
+  background: var(--primary-soft);
 }
 
 .quick-select-section small {
   display: block;
   font-size: 11px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-muted);
   text-transform: uppercase;
   margin-bottom: 8px;
 }
@@ -139,25 +137,30 @@
 
 .quick-chip {
   padding: 4px 10px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
   font-size: 12px;
-  font-family: monospace;
-  color: #334155;
+  font-family: var(--font-mono);
+  color: var(--text-body);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    border-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    background var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .quick-chip:hover {
-  border-color: #2563eb;
-  color: #2563eb;
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
 }
 
 .quick-chip.selected {
-  background: #eff6ff;
-  border-color: #2563eb;
-  color: #1e40af;
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary-hover);
   font-weight: 600;
 }
 
@@ -167,12 +170,13 @@
   gap: 8px;
   padding: 10px 14px;
   margin-bottom: 18px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  color: #991b1b;
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-md);
+  color: var(--danger);
   font-size: 13px;
   line-height: 1.4;
+  animation: shake 0.4s var(--ease-standard);
 }
 
 .admin-form {
@@ -196,31 +200,36 @@
 .admin-field label {
   font-size: 12px;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-body);
 }
 
 .admin-field input,
 .admin-field select {
   width: 100%;
   padding: 9px 12px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 7px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
   font-size: 13px;
-  color: #0f172a;
+  color: var(--text-main);
   outline: none;
-  transition: all 0.15s ease;
+  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-base) ease;
+}
+
+.admin-field input:hover:not(:focus),
+.admin-field select:hover:not(:focus) {
+  border-color: var(--text-light);
 }
 
 .admin-field input:focus,
 .admin-field select:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-ring);
 }
 
 .field-hint {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-light);
 }
 
 .admin-actions {
@@ -228,46 +237,54 @@
   gap: 10px;
   margin-top: 10px;
   padding-top: 14px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-light);
 }
 
 .admin-submit-btn {
   flex: 1;
   padding: 11px;
-  background: #0f172a;
+  background: var(--primary);
   color: #ffffff;
   border: none;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease;
+  box-shadow: 0 8px 18px -8px rgba(37, 99, 235, 0.55);
+  transition:
+    background var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .admin-submit-btn:hover:not(:disabled) {
-  background: #2563eb;
+  background: var(--primary-hover);
+  transform: translateY(-1px);
 }
 
 .admin-submit-btn:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
+  cursor: progress;
+  background:
+    linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%) 0 0 / 200% 100%,
+    #7ea4f3;
+  animation: shimmer 1.2s linear infinite;
+  box-shadow: none;
 }
 
 .admin-delete-btn {
   padding: 11px 16px;
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  border-radius: 7px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--dur-fast) ease;
 }
 
 .admin-delete-btn:hover:not(:disabled) {
-  background: #fee2e2;
-  border-color: #fca5a5;
+  background: #fde4e2;
+  border-color: #fbb8b3;
 }
 
 .admin-delete-btn:disabled {
@@ -278,15 +295,26 @@
 .admin-cancel-btn {
   padding: 11px 18px;
   background: transparent;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
-  border-radius: 7px;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  transition: all var(--dur-fast) ease;
 }
 
 .admin-cancel-btn:hover {
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--bg-subtle);
+  color: var(--text-main);
+}
+
+@media (max-width: 480px) {
+  .form-row.two-cols {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-actions {
+    flex-wrap: wrap;
+  }
 }

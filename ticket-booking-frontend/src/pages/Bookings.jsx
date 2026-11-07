@@ -16,7 +16,7 @@ function Bookings({ bookings, onConfirmReservation, onRefreshOrders }) {
           )}
         </div>
         {isAuthenticated && (
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div className="bookings-heading-actions">
             {onRefreshOrders && (
               <button
                 type="button"
@@ -24,7 +24,7 @@ function Bookings({ bookings, onConfirmReservation, onRefreshOrders }) {
                 onClick={onRefreshOrders}
                 title="Sync bookings with server"
               >
-                🔄 Refresh
+<span className="refresh-icon" aria-hidden="true">🔄</span> Refresh
               </button>
             )}
             <span className="count-pill">{bookings.length} {bookings.length === 1 ? "booking" : "bookings"}</span>
@@ -56,7 +56,7 @@ function Bookings({ bookings, onConfirmReservation, onRefreshOrders }) {
         </div>
       ) : (
         <div className="booking-list">
-          {bookings.map((booking) => {
+          {bookings.map((booking, index) => {
             const quantity = booking.quantity || 1;
             const eventPrice = booking.event?.price || 0;
             const totalPrice = booking.totalPrice || (eventPrice * quantity);
@@ -66,7 +66,11 @@ function Bookings({ bookings, onConfirmReservation, onRefreshOrders }) {
             const isExpired = status === "EXPIRED";
 
             return (
-              <div className="booking-card" key={booking.bookingId || booking.reservationId || booking.id}>
+              <div
+                className="booking-card"
+                key={booking.bookingId || booking.reservationId || booking.id}
+                style={{ "--i": Math.min(index, 10) }}
+              >
                 <div className="booking-card-left">
                   <div className="booking-card-header">
                     <span className="booking-category">{booking.event?.category || "Live Event"}</span>

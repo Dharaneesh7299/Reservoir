@@ -1,19 +1,78 @@
+/* ==========================================================================
+   TicketHub design tokens (light theme)
+   Every component stylesheet reads from these variables.
+   ========================================================================== */
+
 * {
   box-sizing: border-box;
 }
 
 :root {
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --bg-page: #ffffff;
-  --bg-subtle: #f8fafc;
-  --text-main: #0f172a;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Surfaces */
+  --bg-page: #f6f8fc;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f8fafd;
+  --bg-muted: #eef2f8;
+
+  /* Text */
+  --text-main: #1e293b;
+  --text-body: #334155;
   --text-muted: #64748b;
   --text-light: #94a3b8;
-  --border-subtle: #e2e8f0;
-  --border-light: #f1f5f9;
+
+  /* Borders */
+  --border-subtle: #e3e8f1;
+  --border-light: #eef1f6;
+  --border-strong: #cfd7e4;
+
+  /* Brand (blue) */
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
-  --primary-subtle: #eff6ff;
+  --primary-soft: #eaf1ff;
+  --primary-softer: #f4f7ff;
+  --primary-border: #c9dafd;
+  --primary-ring: rgba(37, 99, 235, 0.16);
+
+  /* Status */
+  --success: #15803d;
+  --success-soft: #ecfdf3;
+  --success-border: #bbf0cf;
+  --warning: #a16207;
+  --warning-soft: #fefbea;
+  --warning-border: #fbe7a1;
+  --danger: #b91c1c;
+  --danger-soft: #fef3f2;
+  --danger-border: #fdd3d0;
+  --admin: #92400e;
+  --admin-soft: #fff7e6;
+  --admin-border: #fde3b0;
+
+  /* Shape */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-pill: 9999px;
+
+  /* Elevation (soft, cool-tinted) */
+  --shadow-xs: 0 1px 2px rgba(30, 41, 59, 0.05);
+  --shadow-sm: 0 2px 6px -1px rgba(30, 41, 59, 0.06), 0 1px 2px rgba(30, 41, 59, 0.04);
+  --shadow-md: 0 10px 24px -8px rgba(30, 64, 175, 0.12), 0 4px 8px -4px rgba(30, 41, 59, 0.05);
+  --shadow-lg: 0 24px 48px -16px rgba(30, 64, 175, 0.18), 0 8px 16px -8px rgba(30, 41, 59, 0.08);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 150ms;
+  --dur-base: 220ms;
+  --dur-slow: 420ms;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -33,4 +92,78 @@ select {
 
 button {
   cursor: pointer;
+}
+
+::selection {
+  background: var(--primary-soft);
+  color: var(--primary-hover);
+}
+
+/* Visible keyboard focus everywhere, invisible for mouse clicks. */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Shared keyframes
+   ========================================================================== */
+
+@keyframes authFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes authSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+/* Respect the user's OS-level "reduce motion" preference. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

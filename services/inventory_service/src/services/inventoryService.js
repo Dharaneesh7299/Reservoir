@@ -16,38 +16,66 @@ const confirmScript = fs.readFileSync(
   "utf8"
 );
 
+// Set of all event IDs. Lets GET /api/events list events without `KEYS`,
+// which is O(N) over the whole keyspace and blocks Redis while it runs.
+const EVENT_INDEX_KEY = "events:index";
+
 async function setInventory(eventId, quantity, metadata = null) {
   const key = `inventory:${eventId}`;
 
-  await redis.set(key, String(quantity));
+  const multi = redis.multi().set(key, String(quantity)).sAdd(EVENT_INDEX_KEY, eventId);
 
   if (metadata && typeof metadata === "object") {
-    await redis.set(`event:meta:${eventId}`, JSON.stringify(metadata));
+    multi.set(`event:meta:${eventId}`, JSON.stringify(metadata));
   }
+
+  await multi.exec();
 
   return { eventId, available: quantity, metadata };
 }
 
 async function deleteInventory(eventId) {
-  const key = `inventory:${eventId}`;
-  const metaKey = `event:meta:${eventId}`;
-  await redis.del(key);
-  await redis.del(metaKey);
+  await redis
+    .multi()
+    .del(`inventory:${eventId}`)
+    .del(`event:meta:${eventId}`)
+    .sRem(EVENT_INDEX_KEY, eventId)
+    .exec();
   return { eventId, deleted: true };
 }
 
+// One-time backfill for data created before the index existed.
+// SCAN iterates incrementally, so unlike KEYS it never blocks Redis.
+async function backfillEventIndex() {
+  let added = 0;
+  for await (const batch of redis.scanIterator({ MATCH: "inventory:*", COUNT: 200 })) {
+    // node-redis v5+ yields arrays of keys; older versions yield single keys.
+    const keys = Array.isArray(batch) ? batch : [batch];
+    const eventIds = keys.map((key) => key.slice("inventory:".length));
+    if (eventIds.length) {
+      added += await redis.sAdd(EVENT_INDEX_KEY, eventIds);
+    }
+  }
+  return added;
+}
+
 async function getAllInventory() {
-  const keys = await redis.keys("inventory:*");
-  if (!keys || keys.length === 0) {
+  const eventIds = await redis.sMembers(EVENT_INDEX_KEY);
+  if (!eventIds || eventIds.length === 0) {
     return [];
   }
 
+  // Two round trips in total, regardless of how many events exist.
+  const [availableValues, metaValues] = await Promise.all([
+    redis.mGet(eventIds.map((id) => `inventory:${id}`)),
+    redis.mGet(eventIds.map((id) => `event:meta:${id}`)),
+  ]);
+
   const items = [];
-  for (const key of keys) {
-    const eventId = key.replace(/^inventory:/, "");
-    const available = await redis.get(key);
+  eventIds.forEach((eventId, i) => {
+    const available = availableValues[i];
     if (available !== null && Number(available) > 0) {
-      const metaStr = await redis.get(`event:meta:${eventId}`);
+      const metaStr = metaValues[i];
       let metadata = null;
       if (metaStr) {
         try {
@@ -70,7 +98,7 @@ async function getAllInventory() {
         type: metadata?.type || "Standard Admission",
       });
     }
-  }
+  });
 
   items.sort((a, b) => a.eventId.localeCompare(b.eventId));
   return items;
@@ -203,6 +231,8 @@ async function confirmReservation(reservationId) {
 }
 
 module.exports = {
+  EVENT_INDEX_KEY,
+  backfillEventIndex,
   setInventory,
   deleteInventory,
   getInventory,

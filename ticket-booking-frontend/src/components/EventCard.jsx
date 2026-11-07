@@ -1,12 +1,13 @@
 import { useAuth } from "../context/useAuth";
 import "./EventCard.css";
 
-function EventCard({ event, onBook, onEdit }) {
+function EventCard({ event, onBook, onEdit, index = 0 }) {
   const { isAdmin } = useAuth();
   const isSoldOut = typeof event.available === "number" && event.available <= 0;
 
   return (
-    <div className={`event-card ${isSoldOut ? "sold-out" : ""}`}>
+    // --i drives the staggered entrance delay in EventCard.css.
+    <div className={`event-card ${isSoldOut ? "sold-out" : ""}`} style={{ "--i": index }}>
       <div className="event-card-header">
         <div className="event-category-chip">
           <span className="category-icon">{event.icon || "🎟️"}</span>

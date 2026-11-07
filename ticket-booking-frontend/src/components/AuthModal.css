@@ -1,5 +1,6 @@
 /* ==========================================================================
-   Auth Modal - Minimal White Theme
+   Auth Modal - Light Theme
+   Shared keyframes (authFadeIn, authSlideUp, riseIn, shake, shimmer) live in index.css.
    ========================================================================== */
 
 .auth-overlay {
@@ -10,40 +11,26 @@
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background-color: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  animation: authFadeIn 0.15s ease-out;
+  background-color: rgba(148, 163, 184, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: authFadeIn var(--dur-base) ease-out;
 }
 
 .auth-modal {
   position: relative;
   width: 100%;
   max-width: 420px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background:
+    radial-gradient(420px 160px at 50% 0%, var(--primary-softer) 0%, transparent 70%),
+    var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
   padding: 32px 28px 28px;
-  box-shadow:
-    0 10px 25px -5px rgba(0, 0, 0, 0.08),
-    0 8px 10px -6px rgba(0, 0, 0, 0.04);
-  animation: authSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes authFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes authSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  box-shadow: var(--shadow-lg);
+  animation: authSlideUp var(--dur-slow) var(--ease-out);
 }
 
 .auth-close-btn {
@@ -58,35 +45,38 @@
   padding: 0;
   background: transparent;
   border: none;
-  border-radius: 6px;
-  color: #64748b;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease, transform var(--dur-base) var(--ease-out);
 }
 
 .auth-close-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--bg-muted);
+  color: var(--text-main);
+  transform: rotate(90deg);
 }
 
+/* Re-keyed by tab in AuthModal.jsx, so this replays on Sign In / Register switch. */
 .auth-header {
   margin-bottom: 20px;
+  animation: riseIn var(--dur-base) var(--ease-out);
 }
 
 .auth-title {
   margin: 0 0 6px;
   font-size: 22px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-main);
   letter-spacing: -0.02em;
 }
 
 .auth-subtitle {
   margin: 0;
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-muted);
   line-height: 1.45;
 }
 
@@ -96,19 +86,20 @@
   gap: 8px;
   padding: 10px 14px;
   margin-bottom: 18px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 8px;
-  color: #1e40af;
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-md);
+  color: var(--primary-hover);
   font-size: 13px;
   line-height: 1.4;
+  animation: riseIn var(--dur-base) var(--ease-out);
 }
 
 .auth-tabs {
   display: flex;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   padding: 3px;
   margin-bottom: 20px;
 }
@@ -118,19 +109,26 @@
   padding: 8px 12px;
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: 7px;
   font-size: 14px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    background var(--dur-base) var(--ease-out),
+    color var(--dur-fast) ease,
+    box-shadow var(--dur-base) ease;
+}
+
+.auth-tab:hover:not(.active) {
+  color: var(--text-main);
 }
 
 .auth-tab.active {
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--bg-surface);
+  color: var(--primary);
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 .auth-error-banner {
@@ -139,12 +137,13 @@
   gap: 8px;
   padding: 10px 14px;
   margin-bottom: 18px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  color: #991b1b;
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-md);
+  color: var(--danger);
   font-size: 13px;
   line-height: 1.4;
+  animation: shake 0.4s var(--ease-standard);
 }
 
 .auth-form {
@@ -162,7 +161,7 @@
 .auth-field label {
   font-size: 13px;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-body);
 }
 
 .auth-field-header {
@@ -173,46 +172,55 @@
 
 .auth-field-hint {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-light);
 }
 
 .auth-field input {
   width: 100%;
   padding: 10px 14px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
   font-size: 14px;
-  color: #0f172a;
+  color: var(--text-main);
   outline: none;
-  transition: all 0.15s ease;
+  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-base) ease;
+}
+
+.auth-field input:hover:not(:focus) {
+  border-color: var(--text-light);
 }
 
 .auth-field input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-ring);
 }
 
 .auth-field input::placeholder {
-  color: #94a3b8;
+  color: var(--text-light);
 }
 
 .auth-submit-btn {
   width: 100%;
   margin-top: 4px;
   padding: 11px 16px;
-  background: #2563eb;
+  background: var(--primary);
   color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.05s ease;
+  box-shadow: 0 8px 18px -8px rgba(37, 99, 235, 0.55);
+  transition:
+    background var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) ease;
 }
 
 .auth-submit-btn:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--primary-hover);
+  transform: translateY(-1px);
 }
 
 .auth-submit-btn:active:not(:disabled) {
@@ -220,21 +228,25 @@
 }
 
 .auth-submit-btn:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
+  cursor: progress;
+  background:
+    linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%) 0 0 / 200% 100%,
+    #7ea4f3;
+  animation: shimmer 1.2s linear infinite;
+  box-shadow: none;
 }
 
 .auth-footer {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-light);
   text-align: center;
 }
 
 .auth-footer p {
   margin: 0;
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .auth-link-btn {
@@ -243,12 +255,15 @@
   padding: 0;
   font-size: 13px;
   font-weight: 600;
-  color: #2563eb;
+  color: var(--primary);
   cursor: pointer;
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: color var(--dur-fast) ease, text-decoration-color var(--dur-fast) ease;
 }
 
 .auth-link-btn:hover {
-  color: #1d4ed8;
+  color: var(--primary-hover);
+  text-decoration-color: currentColor;
 }

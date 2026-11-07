@@ -77,8 +77,16 @@ function Events({ events = [], loading = false, error = "", onBook, onOpenAdmin,
         </div>
 
         {loading ? (
-          <div className="empty-search-state">
-            <p className="empty-message">Connecting to inventory service and checking available tickets...</p>
+          <div className="event-grid" aria-busy="true" aria-label="Loading events">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div className="skeleton-card" key={i} style={{ "--i": i }} aria-hidden="true">
+                <div className="skeleton-line chip" />
+                <div className="skeleton-line title" />
+                <div className="skeleton-line" />
+                <div className="skeleton-line short" />
+                <div className="skeleton-line footer" />
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="empty-search-state error">
@@ -86,9 +94,10 @@ function Events({ events = [], loading = false, error = "", onBook, onOpenAdmin,
           </div>
         ) : filteredEvents.length > 0 ? (
           <div className="event-grid">
-            {filteredEvents.map((event) => (
+            {filteredEvents.map((event, index) => (
               <EventCard
                 key={event.id || event.eventId}
+                index={index}
                 event={event}
                 onBook={onBook}
                 onEdit={onEdit}
@@ -109,10 +118,10 @@ function Events({ events = [], loading = false, error = "", onBook, onOpenAdmin,
         ) : (
           <div className="empty-search-state">
             <div className="empty-state-icon">🎟️</div>
-            <p className="empty-message" style={{ fontWeight: 600, color: "#0f172a" }}>
+            <p className="empty-message empty-title">
               No tickets currently available in inventory
             </p>
-            <p style={{ color: "#64748b", fontSize: "14px", margin: "4px 0 16px" }}>
+            <p className="empty-hint">
               {isAdmin
                 ? "As an administrator, click '+ Add Tickets' to initialize event tickets into the backend Redis cache."
                 : "All tickets are currently reserved or waiting for release. Check back soon!"}

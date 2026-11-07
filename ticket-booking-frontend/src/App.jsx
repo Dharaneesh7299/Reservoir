@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthProvider";
 import { useAuth } from "./context/useAuth";
@@ -70,7 +70,8 @@ function AppContent() {
           const map = new Map();
           for (const item of existing) {
             const key = item.bookingId || item.reservationId || item.id;
-            if (key) map.set(key, item);
+            // Drop client-only bookings left in the cache by the removed demo mode.
+            if (key && !String(key).startsWith("demo-")) map.set(key, item);
           }
           for (const order of serverOrders) {
             const key = order.bookingId || order.reservationId || order.id;
@@ -102,12 +103,19 @@ function AppContent() {
     handleRefreshOrders();
   }, [handleRefreshOrders]);
 
+  // One timer at a time, so a new toast isn't cleared early by an older one
+  // (the CSS countdown bar assumes a full 4 s).
+  const toastTimerRef = useRef(null);
+
   function showToast(msg) {
+    clearTimeout(toastTimerRef.current);
     setToastMessage(msg);
-    setTimeout(() => {
+    toastTimerRef.current = setTimeout(() => {
       setToastMessage("");
     }, 4000);
   }
+
+  useEffect(() => () => clearTimeout(toastTimerRef.current), []);
 
   const loadLiveEvents = useCallback(async () => {
     try {
@@ -241,34 +249,8 @@ function AppContent() {
     }
   }
 
-  function handleDemoFallbackBooking() {
-    if (!user?.id) return;
-    const fallbackId = `demo-${Date.now()}`;
-    const newBooking = {
-      bookingId: fallbackId,
-      reservationId: fallbackId,
-      userId: user.id,
-      event: selectedEvent,
-      quantity: ticketQuantity,
-      totalPrice: (selectedEvent.price || 0) * ticketQuantity,
-      status: "CONFIRMED (DEMO)",
-      createdAt: new Date().toISOString(),
-    };
-
-    setUserBookingsMap((prev) => {
-      const userList = prev[user.id] || bookings;
-      const updated = [newBooking, ...userList];
-      try {
-        localStorage.setItem(`ticket_bookings_${user.id}`, JSON.stringify(updated));
-      } catch {}
-      return { ...prev, [user.id]: updated };
-    });
-    setSelectedEvent(null);
-    showToast("🎉 Booking saved in demo mode!");
-  }
-
   function handleLogout() {
-    setBookings([]);
+    // `bookings` is derived from the current user ID, so it clears itself on logout.
     logout();
   }
 
@@ -296,7 +278,7 @@ function AppContent() {
       />
 
       {toastMessage && (
-        <div className="toast-notification" role="status">
+        <div className="toast-notification" role="status" key={toastMessage}>
           <span>{toastMessage}</span>
           <button
             type="button"
@@ -378,7 +360,8 @@ function AppContent() {
         </div>
       </nav>
 
-      {/* Routes */}
+      {/* Routes (keyed by path so each page plays its entrance transition) */}
+      <div className="page-transition" key={location.pathname}>
       <Routes>
         <Route
           path="/"
@@ -407,6 +390,7 @@ function AppContent() {
           }
         />
       </Routes>
+      </div>
 
       {/* Booking Confirmation Modal */}
       {selectedEvent && (
@@ -464,7 +448,7 @@ function AppContent() {
                   >
                     -
                   </button>
-                  <span className="quantity-value">{ticketQuantity}</span>
+                  <span className="quantity-value" key={ticketQuantity}>{ticketQuantity}</span>
                   <button
                     type="button"
                     onClick={() => setTicketQuantity((q) => Math.min(10, q + 1))}
@@ -479,7 +463,7 @@ function AppContent() {
               {/* Price Breakdown */}
               <div className="booking-price-summary">
                 <span>Total Amount:</span>
-                <strong className="total-amount">
+                <strong className="total-amount" key={ticketQuantity}>
                   ₹{((selectedEvent.price || 0) * ticketQuantity).toLocaleString("en-IN")}
                 </strong>
               </div>
@@ -494,13 +478,6 @@ function AppContent() {
                     Note: Backend inventory must be initialized by admin via <code>PUT /api/admin/events/{selectedEvent.id || selectedEvent.eventId}/inventory</code>.
                   </p>
                 )}
-                <button
-                  type="button"
-                  className="fallback-confirm-btn"
-                  onClick={handleDemoFallbackBooking}
-                >
-                  Confirm in Demo Mode
-                </button>
               </div>
             )}
 

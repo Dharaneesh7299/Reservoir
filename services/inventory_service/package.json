@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test \"tests/**/*.test.js\"",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "worker:expiration": "node src/workers/reservationExpirationWorker.js"
+    "worker:expiration": "node src/workers/reservationExpirationWorker.js",
+    "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
+    "migrate:deploy": "prisma migrate deploy --config prisma7.config.ts",
+    "migrate:dev": "prisma migrate dev --config prisma7.config.ts"
   },
   "keywords": [],
   "author": "",

@@ -19,6 +19,13 @@ async function startServer() {
     await redis.ping();
     console.log("Connected to Redis");
 
+    // Index events created before the events:index set existed (idempotent).
+    const { backfillEventIndex } = require("./services/inventoryService");
+    const indexed = await backfillEventIndex();
+    if (indexed > 0) {
+      console.log(`Backfilled ${indexed} event(s) into events:index`);
+    }
+
     // Connect to RabbitMQ and declare messaging resources.
     await connectRabbitMQ();
     await setupReservationMessaging();

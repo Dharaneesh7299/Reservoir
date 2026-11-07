@@ -10,8 +10,57 @@ permissions:
   packages: write
 
 jobs:
-  build-and-push:
+  test:
     runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: services/inventory_service
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+        env:
+          TEST_REDIS_URL: redis://localhost:6379/15
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ticket-frontend
+            context: ./ticket-booking-frontend
+          - name: ticket-inventory
+            context: ./services/inventory_service
+          - name: ticket-order
+            context: ./services/order_service
+          - name: ticket-notification
+            context: ./services/notification_service
 
     steps:
       - name: Checkout repository
@@ -24,14 +73,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # The expiration worker reuses the ticket-inventory image, so it has no separate build.
       - name: Build Docker image
         run: |
           docker build \
-            -t ghcr.io/dharaneesh7299/ticket-booking-api:latest \
-            -t ghcr.io/dharaneesh7299/ticket-booking-api:${{ github.sha }} \
-            ./ticket-booking-system
+            -t ghcr.io/dharaneesh7299/${{ matrix.name }}:latest \
+            -t ghcr.io/dharaneesh7299/${{ matrix.name }}:${{ github.sha }} \
+            ${{ matrix.context }}
 
       - name: Push Docker images
         run: |
-          docker push ghcr.io/dharaneesh7299/ticket-booking-api:latest
-          docker push ghcr.io/dharaneesh7299/ticket-booking-api:${{ github.sha }}
+          docker push ghcr.io/dharaneesh7299/${{ matrix.name }}:latest
+          docker push ghcr.io/dharaneesh7299/${{ matrix.name }}:${{ github.sha }}

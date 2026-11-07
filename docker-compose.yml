@@ -18,9 +18,32 @@ services:
       - ./services/inventory_service/.env
     environment:
       REDIS_URL: redis://redis:6379
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-      DATABASE_URL: postgresql://ticketuser:password@postgres:5432/ticketbooking
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ticketuser}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-ticketbooking}
     depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Background process that releases seats from unconfirmed reservations.
+  # Reuses the inventory image; only the start command differs.
+  expiration-worker:
+    build: ./services/inventory_service
+    image: ticket-inventory
+    command: ["npm", "run", "worker:expiration"]
+    env_file:
+      - ./services/inventory_service/.env
+    environment:
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ticketuser}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-ticketbooking}
+    depends_on:
+      inventory:
+        condition: service_started
       redis:
         condition: service_healthy
       postgres:
@@ -35,8 +58,8 @@ services:
     env_file:
       - ./services/order_service/.env
     environment:
-      DATABASE_URL: postgresql://ticketuser:password@postgres:5432/ticketbooking
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ticketuser}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-ticketbooking}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,7 +73,7 @@ services:
     env_file:
       - ./services/notification_service/.env
     environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -72,15 +95,15 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: ticketbooking
-      POSTGRES_USER: ticketuser
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_DB:-ticketbooking}
+      POSTGRES_USER: ${POSTGRES_USER:-ticketuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     ports:
       - "15433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ticketuser -d ticketbooking"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -88,6 +111,9 @@ services:
 
   rabbitmq:
     image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
     ports:
       - "5673:5672"
       - "15673:15672"

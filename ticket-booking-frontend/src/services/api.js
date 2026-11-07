@@ -244,3 +244,41 @@ export async function fetchUserOrders(token) {
     return [];
   }
 }
+
+/**
+ * Exchange a refresh token for a new session (the old refresh token is consumed).
+ * @param {string} refreshToken
+ * @returns {Promise<{ token: string, refreshToken: string, user: { id: string, email: string, role: string } }>}
+ */
+export async function refreshSession(refreshToken) {
+  const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.error || `Refresh failed: HTTP ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Revoke a refresh token on the server (best effort).
+ * @param {string} refreshToken
+ */
+export async function logoutSession(refreshToken) {
+  await fetch(`${API_BASE_URL}/api/auth/logout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+    keepalive: true,
+  });
+}
